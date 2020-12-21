@@ -44,6 +44,8 @@ fin-stats
 fin-stats -f ~/finances.yaml
 # print investments details
 fin-stats -f ~/finances.yaml -d
+# write to target directory
+fin-stats -f ~/finances.yaml -d -o ~/finances
 ```
 
 Output:
