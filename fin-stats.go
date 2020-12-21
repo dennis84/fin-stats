@@ -33,21 +33,40 @@ type conf struct {
 
 type InvestmentStats struct {
   Sum float64
-  SumIn float64
+  In float64
   Loss float64
-  Details map[string][]InvestmentDetail
+  Details map[string][]InvestmentDetail `yaml:"-"`
 }
 
 type InvestmentDetail struct {
   Units float64
   Sum float64
   In float64
+  Diff float64
   Quote Quote
 }
 
 type Quote struct {
   Price float64
   Pct float64
+}
+
+type Out struct {
+  Date time.Time
+  Savings float64
+  Stocks InvestmentStats `yaml:"stocks,omitempty"`
+  Assets InvestmentStats `yaml:"assets,omitempty"`
+  Crypto InvestmentStats `yaml:"crypto,omitempty"`
+  InvestmentsSum float64 `yaml:"investments_sum"`
+  Total float64
+
+  Income float64
+  Expenses float64
+  Budget float64
+}
+
+type DetailsOut struct {
+  Details map[string][]InvestmentDetail
 }
 
 var quoteCache = make(map[string]Quote)
@@ -63,17 +82,13 @@ func main() {
 
   start := time.Now()
   filename := findConfigFile(*filenamePtr)
-  var out bytes.Buffer
+  var buf bytes.Buffer
 
   if *outPtr != "" {
     blue.DisableColor()
     green.DisableColor()
     red.DisableColor()
   }
-
-  out.WriteString("finance_stats:\n")
-  out.WriteString("  file:           " + filename + "\n")
-  out.WriteString("  date:           " + start.Format(time.RFC3339) + "\n")
 
   c, err := readConf(filename)
   if err != nil {
@@ -103,30 +118,27 @@ func main() {
     expenses = expenses + value
   }
 
-  if *detailsPtr {
-    printInvestmentDetails(&out, "stocks", stockStats)
-    printInvestmentDetails(&out, "assets", assetsStats)
-    printInvestmentDetails(&out, "crypto", cryptoStats)
+  out := Out{
+    Date: start,
+    Savings: savings,
+    Stocks: stockStats,
+    Assets: assetsStats,
+    Crypto: cryptoStats,
+    InvestmentsSum: investmentsSum,
+    Total: savings + (investmentsSum * currencyFactor),
+    Income: income,
+    Expenses: expenses,
+    Budget: income - expenses,
   }
 
-  fmt.Fprintf(&out, "savings:          %.2f\n", savings)
-  printInvestmentStats(&out, "stocks", stockStats, currencyFactor)
-  printInvestmentStats(&out, "assets", assetsStats, currencyFactor)
-  printInvestmentStats(&out, "crypto", cryptoStats, currencyFactor)
-
-  blue.Fprintf(&out, "total:            %.2f\n", savings + (investmentsSum * currencyFactor))
-  fmt.Fprintf(&out, "income:           %.2f\n", income)
-  fmt.Fprintf(&out, "expenses:         %.2f\n", expenses)
-  fmt.Fprintf(&out, "budget:           %.2f\n", income - expenses)
-
-  fmt.Println(out.String())
+  prettyPrint(&buf, out, *detailsPtr)
 
   if *outPtr != "" {
-    writeFile(out, *outPtr, start)
+    writeFile(buf, *outPtr, start)
   }
 }
 
-func writeFile(out bytes.Buffer, dir string, date time.Time) {
+func writeFile(buf bytes.Buffer, dir string, date time.Time) {
   filename := dir + "/" + date.Format(time.RFC3339) + ".yaml"
   file, err := os.Create(filename)
 
@@ -135,7 +147,7 @@ func writeFile(out bytes.Buffer, dir string, date time.Time) {
     os.Exit(1)
   }
 
-  file.Write(out.Bytes())
+  file.Write(buf.Bytes())
   file.Close()
 }
 
@@ -238,6 +250,7 @@ func getInvestmentsStats(investments map[string][]Order) InvestmentStats {
         Units: order.Units,
         In: totalIn,
         Sum: total,
+        Diff: total - totalIn,
         Quote: quote,
       }
 
@@ -251,42 +264,25 @@ func getInvestmentsStats(investments map[string][]Order) InvestmentStats {
   return InvestmentStats{sum, sumIn, loss, details}
 }
 
-func printInvestmentDetails(out *bytes.Buffer, name string, stats InvestmentStats) {
-  if len(stats.Details) > 0 {
-    fmt.Fprintln(out, name + "_details:")
+func prettyPrint(buf *bytes.Buffer, out Out, details bool) {
+  d := toBytes(&out)
+  fmt.Println(string(d))
 
-    for symbol, investments := range stats.Details {
-      for _, detail := range investments {
-        fmt.Fprintln(out, "  - symbol:      ", symbol)
-        fmt.Fprintln(out, "    units:       ", detail.Units)
-        fmt.Fprintf(out, "    in:           %.2f\n", detail.In)
-        fmt.Fprintf(out, "    current:      %.2f\n", detail.Sum)
-        if detail.In > detail.Sum {
-          red.Fprintf(out, "    loss:         %.2f\n", detail.In - detail.Sum)
-        } else {
-          green.Fprintf(out, "    profit:       %.2f\n", detail.Sum - detail.In)
-        }
-        fmt.Fprintf(out, "    unit_price:   %.2f\n", detail.Quote.Price)
-        fmt.Fprintf(out, "    today_change: %.2f\n", detail.Quote.Pct)
-      }
-    }
+  if details {
+    stocks := toBytes(&DetailsOut{out.Stocks.Details})
+    assets := toBytes(&DetailsOut{out.Assets.Details})
+    crypto := toBytes(&DetailsOut{out.Crypto.Details})
+    fmt.Println("stock_" + string(stocks))
+    fmt.Println("asset_" + string(assets))
+    fmt.Println("crypto_" + string(crypto))
   }
 }
 
-func printInvestmentStats(out *bytes.Buffer,
-                          name string,
-                          stats InvestmentStats,
-                          currencyFactor float64) {
-  if stats.Sum != 0 {
-    diff := stats.Sum - stats.SumIn
-    c := green
-    if diff < 0 {
-      c = red
-    }
-
-    fmt.Fprintln(out, name + ":")
-    fmt.Fprintf(out, "  current:        %.2f\n", stats.Sum * currencyFactor)
-    c.Fprintf(out, "  diff:           %.2f\n", diff * currencyFactor)
-    fmt.Fprintf(out, "  losses:         %.2f\n", stats.Loss * currencyFactor)
+func toBytes(in interface{}) []byte {
+  d, err := yaml.Marshal(&in)
+  if err != nil {
+    fmt.Println(err)
   }
+
+  return d
 }
