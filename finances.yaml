@@ -1,0 +1,21 @@
+currency: USD
+
+savings:
+  sparkasse: 10000
+  visa: 1200
+
+investments:
+  assets:
+    GC=F: [{units: 2, in: 1200}]
+  stocks:
+    TSLA: [{units: 1, in: 400}, {units: 1, in: 500}]
+    AAPL: [{units: 2, in: 140}]
+
+income:
+  salary: 2500
+
+expenses:
+  rent: 1200
+  car: 50
+  internet: 40
+  electricity: 30
