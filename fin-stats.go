@@ -159,10 +159,10 @@ func getQuote(symbol string) Quote {
 
   price := q.RegularMarketPrice
   pct := q.RegularMarketChangePercent
-  if q.MarketState == "PRE" {
+  if q.MarketState == "PRE" && q.PreMarketPrice > 0 {
     price = q.PreMarketPrice
     pct = q.PreMarketChangePercent
-  } else if q.MarketState == "POST" {
+  } else if q.MarketState == "POST" && q.PostMarketPrice > 0 {
     price = q.PostMarketPrice
     pct = q.PostMarketChangePercent
   }
@@ -210,7 +210,7 @@ func getInvestmentsStats(investments map[string][]Order) InvestmentStats {
       }
 
       details[symbol] = append(details[symbol], detail)
-      if (totalIn > total) {
+      if totalIn > total {
         loss = loss + totalIn - total
       }
     }
@@ -229,7 +229,7 @@ func printInvestmentDetails(name string, stats InvestmentStats) {
         fmt.Println("    units:       ", detail.Units)
         fmt.Printf("    in:           %.2f\n", detail.In)
         highlight.Printf("    current:      %.2f\n", detail.Sum)
-        if (detail.In > detail.Sum) {
+        if detail.In > detail.Sum {
           color.Set(color.FgRed)
           fmt.Printf("    loss:         %.2f\n", detail.In - detail.Sum)
           color.Unset()
@@ -250,13 +250,13 @@ func printInvestmentStats(name string, stats InvestmentStats, currencyFactor flo
     diff := stats.Sum - stats.SumIn
     fmt.Println(name + ":")
     fmt.Printf("  current:        %.2f\n", stats.Sum * currencyFactor)
-    if (diff >= 0) {
+    if diff >= 0 {
       color.Set(color.FgGreen)
     } else {
       color.Set(color.FgRed)
     }
     fmt.Printf("  diff:           %.2f\n", diff * currencyFactor)
-    if (stats.Loss > 0) {
+    if stats.Loss > 0 {
       color.Set(color.FgRed)
     } else {
       color.Set(color.FgGreen)
