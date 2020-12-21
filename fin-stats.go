@@ -3,6 +3,7 @@ package main
 import (
   "bytes"
   "os"
+  "path/filepath"
   "os/user"
   "fmt"
   "time"
@@ -10,7 +11,6 @@ import (
   "flag"
   "gopkg.in/yaml.v2"
   "github.com/piquette/finance-go/quote"
-  "github.com/fatih/color"
 )
 
 type Order struct {
@@ -70,25 +70,15 @@ type DetailsOut struct {
 }
 
 var quoteCache = make(map[string]Quote)
-var blue = color.New(color.FgBlue).Add(color.Bold)
-var green = color.New(color.FgGreen).Add(color.Bold)
-var red = color.New(color.FgRed).Add(color.Bold)
 
 func main() {
   filenamePtr := flag.String("f", "", "filename")
   detailsPtr := flag.Bool("d", false, "details")
-  outPtr := flag.String("o", "", "output dir")
   flag.Parse()
 
   start := time.Now()
   filename := findConfigFile(*filenamePtr)
   var buf bytes.Buffer
-
-  if *outPtr != "" {
-    blue.DisableColor()
-    green.DisableColor()
-    red.DisableColor()
-  }
 
   c, err := readConf(filename)
   if err != nil {
@@ -100,7 +90,6 @@ func main() {
   income := 0.0
   expenses := 0.0
   currencyFactor := getCurrency(c.Currency)
-
   stockStats := getInvestmentsStats(c.Investments.Stocks)
   assetsStats := getInvestmentsStats(c.Investments.Assets)
   cryptoStats := getInvestmentsStats(c.Investments.Crypto)
@@ -132,15 +121,24 @@ func main() {
   }
 
   prettyPrint(&buf, out, *detailsPtr)
-
-  if *outPtr != "" {
-    writeFile(buf, *outPtr, start)
-  }
+  writeFile(buf, filename, start)
 }
 
-func writeFile(buf bytes.Buffer, dir string, date time.Time) {
-  filename := dir + "/" + date.Format(time.RFC3339) + ".yaml"
-  file, err := os.Create(filename)
+func writeFile(buf bytes.Buffer, filename string, date time.Time) {
+  dir, err := filepath.Abs(filepath.Dir(filename))
+  if err != nil {
+    fmt.Println(err)
+  }
+
+  dataDir := dir + "/finances"
+  _, err = os.Stat(dataDir)
+  if err != nil {
+    fmt.Println("Stats could not be saved in:", dataDir)
+    os.Exit(0)
+  }
+
+  target := dataDir + "/" + date.Format(time.RFC3339) + ".yaml"
+  file, err := os.Create(target)
 
   if err != nil {
     fmt.Println("Could not create file:", filename)
@@ -266,16 +264,24 @@ func getInvestmentsStats(investments map[string][]Order) InvestmentStats {
 
 func prettyPrint(buf *bytes.Buffer, out Out, details bool) {
   d := toBytes(&out)
-  fmt.Println(string(d))
+  fmt.Fprintln(buf, string(d))
 
   if details {
     stocks := toBytes(&DetailsOut{out.Stocks.Details})
     assets := toBytes(&DetailsOut{out.Assets.Details})
     crypto := toBytes(&DetailsOut{out.Crypto.Details})
-    fmt.Println("stock_" + string(stocks))
-    fmt.Println("asset_" + string(assets))
-    fmt.Println("crypto_" + string(crypto))
+    if out.Stocks.Sum > 0 {
+      fmt.Fprintln(buf, "stock_" + string(stocks))
+    }
+    if out.Assets.Sum > 0 {
+      fmt.Fprintln(buf, "asset_" + string(assets))
+    }
+    if out.Crypto.Sum > 0 {
+      fmt.Fprintln(buf, "crypto_" + string(crypto))
+    }
   }
+
+  fmt.Println(buf.String())
 }
 
 func toBytes(in interface{}) []byte {
@@ -285,4 +291,13 @@ func toBytes(in interface{}) []byte {
   }
 
   return d
+}
+
+func getHomeDir() string {
+  usr, err := user.Current()
+  if err != nil {
+    fmt.Println(err)
+  }
+
+  return usr.HomeDir
 }
