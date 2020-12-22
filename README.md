@@ -50,39 +50,41 @@ fin-stats -h
 fin-stats sum
 # pass filename
 fin-stats sum -f ~/finances.yaml
+# no graph
+fin-stats sum --no-graph
+# no summary
+fin-stats sum --no-summary
+# watch mode
+fin-stats sum --watch
 ```
 
 Output:
 
 ```bash
-date: 2020-12-22T10:59:57.529261789+01:00
-savings: 11200
-stocks:
-  sum: 1577.6
-  in: 1160
-  diff: 417.5999999999999
-  loss: 0
-assets:
-  sum: 3750.8
-  in: 2400
-  diff: 1350.8000000000002
-  loss: 0
-investments_sum: 5328.4
-total: 16528.4
-income: 2500
-expenses: 1320
-budget: 1180
++-----------------+----------+
+| Savings         | 11200.00 |
+| Stocks Sum      |  1542.67 |
+| Stocks In       |  1160.00 |
+| Stocks Diff     |   382.67 |
+| Stocks Loss     |     0.00 |
+| Assets Sum      |  3729.80 |
+| Assets In       |  2400.00 |
+| Assets Diff     |  1329.80 |
+| Assets Loss     |     0.00 |
+| Investments Sum |  5272.47 |
+| Total           | 16472.47 |
++-----------------+----------+
 
 Total:
- 16534 ┼──────────────╮        ╭
- 15868 ┤              │        │
- 15201 ┤              │        │
- 14534 ┤              │        │
- 13867 ┤              │        │
- 13200 ┤              │        │
- 12534 ┤              │     ╭──╯
- 11867 ┤              │     │
- 11200 ┤              ╰─────╯
+ 16527 ┼───╮
+ 16518 ┤   │
+ 16508 ┤   │
+ 16499 ┤   │
+ 16489 ┤   │
+ 16480 ┤   │
+ 16470 ┤   │                               ╭
+ 16461 ┤   │                       ╭───────╯
+ 16451 ┤   ╰───────────────────────╯
 ```
 
 ## Quote
@@ -143,7 +145,7 @@ Output:
 Print portfolio stats
 
 ```bash
-fin-stats portfolio
+fin-stats portfolio --watch
 ```
 
 Output:

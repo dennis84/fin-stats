@@ -1,7 +1,6 @@
 package main
 
 import (
-  "bytes"
   "os"
   "path/filepath"
   "os/user"
@@ -92,6 +91,7 @@ type MentionsOut struct {
 
 type Options struct {
   File string `flag:"file f"`
+  Watch bool
   NoDetails bool
   NoSummary bool
   NoGraph bool
@@ -117,9 +117,10 @@ func main() {
             Usage: "finance config",
           },
           &cli.BoolFlag{
-            Name: "no-details",
+            Name: "watch",
+            Aliases: []string{"w"},
             Value: false,
-            Usage: "hide investment details",
+            Usage: "watch mode",
           },
           &cli.BoolFlag{
             Name: "no-summary",
@@ -140,9 +141,8 @@ func main() {
         Action:  func(c *cli.Context) error {
           options := Options{
             File: c.String("file"),
-            NoDetails: c.Bool("no-details"),
+            Watch: c.Bool("watch"),
             NoSummary: c.Bool("no-summary"),
-            NoGraph: c.Bool("no-graph"),
             Graph: "total",
           }
 
@@ -331,6 +331,7 @@ func printMentions(max int) {
     table.Append(v)
   }
 
+  fmt.Println("")
   table.Render()
 }
 
@@ -382,10 +383,9 @@ func quoteInfo(symbol string, watch bool) {
   printQuote(q)
 }
 
-func sum(options Options) {
+func doSum(options Options) {
   start := time.Now()
   filename := findConfigFile(options.File)
-  var buf bytes.Buffer
 
   c, err := readConf(filename)
   if err != nil {
@@ -427,11 +427,14 @@ func sum(options Options) {
     Budget: income - expenses,
   }
 
-  prettyPrint(&buf, out, options)
+  if !options.NoSummary {
+    printSumTable(out, options)
+    fmt.Println("")
+  }
 
   history := loadHistory(filename)
   if !options.NoSummary {
-    writeFile(buf, filename, start)
+    writeFile(out, filename, start)
   }
 
   if !options.NoGraph && len(history) > 0 {
@@ -449,6 +452,18 @@ func sum(options Options) {
     fmt.Println("Total:")
     fmt.Println(graph)
   }
+}
+
+func sum(options Options) {
+  if options.Watch {
+    ticker := time.NewTicker(10 * time.Second)
+    for; true; <-ticker.C {
+      fmt.Print("\033[H\033[2J")
+      doSum(options)
+    }
+  }
+
+  doSum(options)
 }
 
 func getQuote(symbol string, cache bool, fail bool) Quote {
@@ -529,29 +544,52 @@ func getInvestmentsStats(investments map[string][]Order) InvestmentStats {
   return InvestmentStats{sum, sumIn, sum - sumIn, loss, details}
 }
 
-func prettyPrint(buf *bytes.Buffer, out Out, options Options) {
-  d := toBytes(&out)
+func printSumTable(out Out, options Options) {
+  data := [][]string{}
 
-  if !options.NoSummary {
-    fmt.Fprintln(buf, string(d))
+  data = [][]string{
+    []string{"Savings", fmt.Sprintf("%.2f", out.Savings)},
   }
 
-  if !options.NoDetails {
-    stocks := toBytes(&DetailsOut{out.Stocks.Details})
-    assets := toBytes(&DetailsOut{out.Assets.Details})
-    crypto := toBytes(&DetailsOut{out.Crypto.Details})
-    if out.Stocks.Sum > 0 {
-      fmt.Fprintln(buf, "stock_" + string(stocks))
-    }
-    if out.Assets.Sum > 0 {
-      fmt.Fprintln(buf, "asset_" + string(assets))
-    }
-    if out.Crypto.Sum > 0 {
-      fmt.Fprintln(buf, "crypto_" + string(crypto))
-    }
+  if out.Stocks.Sum > 0 {
+    data = append(data, [][]string{
+      []string{"Stocks Sum", fmt.Sprintf("%.2f", out.Stocks.Sum)},
+      []string{"Stocks In", fmt.Sprintf("%.2f", out.Stocks.In)},
+      []string{"Stocks Diff", fmt.Sprintf("%.2f", out.Stocks.Diff)},
+      []string{"Stocks Loss", fmt.Sprintf("%.2f", out.Stocks.Loss)},
+    }...)
   }
 
-  fmt.Println(buf.String())
+  if out.Assets.Sum > 0 {
+    data = append(data, [][]string{
+      []string{"Assets Sum", fmt.Sprintf("%.2f", out.Assets.Sum)},
+      []string{"Assets In", fmt.Sprintf("%.2f", out.Assets.In)},
+      []string{"Assets Diff", fmt.Sprintf("%.2f", out.Assets.Diff)},
+      []string{"Assets Loss", fmt.Sprintf("%.2f", out.Assets.Loss)},
+    }...)
+  }
+
+  if out.Crypto.Sum > 0 {
+    data = append(data, [][]string{
+      []string{"Crypto Sum", fmt.Sprintf("%.2f", out.Crypto.Sum)},
+      []string{"Crypto In", fmt.Sprintf("%.2f", out.Crypto.In)},
+      []string{"Crypto Diff", fmt.Sprintf("%.2f", out.Crypto.Diff)},
+      []string{"Crypto Loss", fmt.Sprintf("%.2f", out.Crypto.Loss)},
+    }...)
+  }
+
+  data = append(data, [][]string{
+    []string{"Investments Sum", fmt.Sprintf("%.2f", out.InvestmentsSum)},
+    []string{"Total", fmt.Sprintf("%.2f", out.Total)},
+  }...)
+
+  table := tablewriter.NewWriter(os.Stdout)
+
+  for _, v := range data {
+    table.Append(v)
+  }
+
+  table.Render()
 }
 
 func toBytes(in interface{}) []byte {
@@ -595,7 +633,7 @@ func loadHistory(filename string) []Out {
   return outs
 }
 
-func writeFile(buf bytes.Buffer, filename string, date time.Time) {
+func writeFile(out Out, filename string, date time.Time) {
   dir, err := filepath.Abs(filepath.Dir(filename))
   if err != nil {
     fmt.Println(err)
@@ -616,7 +654,7 @@ func writeFile(buf bytes.Buffer, filename string, date time.Time) {
     os.Exit(1)
   }
 
-  file.Write(buf.Bytes())
+  file.Write(toBytes(&out))
   file.Close()
 }
 
