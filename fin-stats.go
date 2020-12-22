@@ -12,6 +12,7 @@ import (
   "gopkg.in/yaml.v2"
   "github.com/piquette/finance-go/quote"
   "github.com/guptarohit/asciigraph"
+  "github.com/octago/sflags/gen/gflag"
 )
 
 type Order struct {
@@ -71,15 +72,34 @@ type DetailsOut struct {
   Details map[string][]InvestmentDetail
 }
 
+type Options struct {
+  File string `flag:"file f"`
+  NoDetails bool
+  NoSummary bool
+  NoGraph bool
+  Graph string
+}
+
 var quoteCache = make(map[string]Quote)
 
 func main() {
-  filenamePtr := flag.String("f", "", "filename")
-  detailsPtr := flag.Bool("d", false, "details")
-  flag.Parse()
+  options := &Options{
+    File: "",
+    NoDetails: false,
+    NoSummary: false,
+    NoGraph: false,
+    Graph: "total",
+	}
+
+	err := gflag.ParseToDef(options)
+	if err != nil {
+    fmt.Println(err)
+    os.Exit(1)
+	}
+	flag.Parse()
 
   start := time.Now()
-  filename := findConfigFile(*filenamePtr)
+  filename := findConfigFile(options.File)
   var buf bytes.Buffer
 
   c, err := readConf(filename)
@@ -122,24 +142,26 @@ func main() {
     Budget: income - expenses,
   }
 
-  prettyPrint(&buf, out, *detailsPtr)
+  prettyPrint(&buf, out, *options)
 
   history := loadHistory(filename)
   writeFile(buf, filename, start)
 
-  data := []float64{}
+  if !options.NoGraph {
+    data := []float64{}
 
-  for _, stat := range history {
-    data = append(data, stat.Total)
+    for _, stat := range history {
+      data = append(data, stat.Total)
+    }
+
+    graph := asciigraph.Plot(data, asciigraph.Height(8))
+    if len(data) > 80 {
+      graph = asciigraph.Plot(data, asciigraph.Height(8), asciigraph.Width(80))
+    }
+
+    fmt.Println("Total:")
+    fmt.Println(graph)
   }
-
-  graph := asciigraph.Plot(data, asciigraph.Height(8))
-  if len(data) > 80 {
-    graph = asciigraph.Plot(data, asciigraph.Height(8), asciigraph.Width(80))
-  }
-
-  fmt.Println("Total:")
-  fmt.Println(graph)
 }
 
 func getQuote(symbol string) Quote {
@@ -220,11 +242,11 @@ func getInvestmentsStats(investments map[string][]Order) InvestmentStats {
   return InvestmentStats{sum, sumIn, sum - sumIn, loss, details}
 }
 
-func prettyPrint(buf *bytes.Buffer, out Out, details bool) {
+func prettyPrint(buf *bytes.Buffer, out Out, options Options) {
   d := toBytes(&out)
   fmt.Fprintln(buf, string(d))
 
-  if details {
+  if !options.NoDetails {
     stocks := toBytes(&DetailsOut{out.Stocks.Details})
     assets := toBytes(&DetailsOut{out.Assets.Details})
     crypto := toBytes(&DetailsOut{out.Crypto.Details})
@@ -239,7 +261,9 @@ func prettyPrint(buf *bytes.Buffer, out Out, details bool) {
     }
   }
 
-  fmt.Println(buf.String())
+  if !options.NoSummary {
+    fmt.Println(buf.String())
+  }
 }
 
 func toBytes(in interface{}) []byte {

@@ -38,12 +38,18 @@ expenses:
 Run:
 
 ```bash
+# help
+fin-stats -h
 # use ~/finances.yaml
 fin-stats
 # pass filename
-fin-stats -f ~/finances.yaml
-# print investments details
-fin-stats -f ~/finances.yaml -d
+fin-stats -file ~/finances.yaml
+# no details
+fin-stats -no-details
+# no summary
+fin-stats -no-summary
+# no graph
+fin-stats -no-graph
 ```
 
 Output:
