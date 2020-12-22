@@ -8,11 +8,10 @@ import (
   "fmt"
   "time"
   "io/ioutil"
-  "flag"
   "gopkg.in/yaml.v2"
   "github.com/piquette/finance-go/quote"
   "github.com/guptarohit/asciigraph"
-  "github.com/octago/sflags/gen/gflag"
+  "github.com/urfave/cli/v2"
 )
 
 type Order struct {
@@ -83,21 +82,85 @@ type Options struct {
 var quoteCache = make(map[string]Quote)
 
 func main() {
-  options := &Options{
-    File: "",
-    NoDetails: false,
-    NoSummary: false,
-    NoGraph: false,
-    Graph: "total",
-	}
+  app := &cli.App{
+    Name: "fin-stats",
+    Usage: "",
+    Commands: []*cli.Command{
+      {
+        Name: "sum",
+        Usage: "Print stats",
+        Flags: []cli.Flag {
+          &cli.StringFlag{
+            Name: "file",
+            Aliases: []string{"f"},
+            Value: "",
+            Usage: "finance config",
+          },
+          &cli.BoolFlag{
+            Name: "no-details",
+            Value: false,
+            Usage: "hide investment details",
+          },
+          &cli.BoolFlag{
+            Name: "no-summary",
+            Value: false,
+            Usage: "hide summary details",
+          },
+          &cli.BoolFlag{
+            Name: "no-graph",
+            Value: false,
+            Usage: "hide graph",
+          },
+          &cli.StringFlag{
+            Name: "graph",
+            Value: "total",
+            Usage: "Graph value",
+          },
+        },
+        Action:  func(c *cli.Context) error {
+          options := Options{
+            File: c.String("file"),
+            NoDetails: c.Bool("no-details"),
+            NoSummary: c.Bool("no-summary"),
+            NoGraph: c.Bool("no-graph"),
+            Graph: "total",
+          }
 
-	err := gflag.ParseToDef(options)
-	if err != nil {
+          sum(options)
+          return nil
+        },
+      },
+      {
+        Name: "quote",
+        Usage: "Print quote",
+        Action:  func(c *cli.Context) error {
+          symbol := ""
+          if c.NArg() > 0 {
+            symbol = c.Args().Get(0)
+          }
+
+          quoteInfo(symbol)
+          return nil
+        },
+      },
+    },
+  }
+
+  err := app.Run(os.Args)
+  if err != nil {
     fmt.Println(err)
     os.Exit(1)
-	}
-	flag.Parse()
+  }
+}
 
+func quoteInfo(symbol string) {
+  q := getQuote(symbol)
+  d := toBytes(&q)
+  fmt.Println("symbol:", symbol)
+  fmt.Println(string(d))
+}
+
+func sum(options Options) {
   start := time.Now()
   filename := findConfigFile(options.File)
   var buf bytes.Buffer
@@ -142,12 +205,12 @@ func main() {
     Budget: income - expenses,
   }
 
-  prettyPrint(&buf, out, *options)
+  prettyPrint(&buf, out, options)
 
   history := loadHistory(filename)
   writeFile(buf, filename, start)
 
-  if !options.NoGraph {
+  if !options.NoGraph && len(history) > 0 {
     data := []float64{}
 
     for _, stat := range history {
@@ -244,7 +307,10 @@ func getInvestmentsStats(investments map[string][]Order) InvestmentStats {
 
 func prettyPrint(buf *bytes.Buffer, out Out, options Options) {
   d := toBytes(&out)
-  fmt.Fprintln(buf, string(d))
+
+  if !options.NoSummary {
+    fmt.Fprintln(buf, string(d))
+  }
 
   if !options.NoDetails {
     stocks := toBytes(&DetailsOut{out.Stocks.Details})
@@ -261,9 +327,7 @@ func prettyPrint(buf *bytes.Buffer, out Out, options Options) {
     }
   }
 
-  if !options.NoSummary {
-    fmt.Println(buf.String())
-  }
+  fmt.Println(buf.String())
 }
 
 func toBytes(in interface{}) []byte {

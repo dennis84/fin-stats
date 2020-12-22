@@ -2,6 +2,13 @@
 
 Sum finances of bank accounts, stocks, assets and crypto for a better overview.
 
+## Build
+
+```bash
+go build fin-stats.go
+./fin-stats
+```
+
 ## Usage
 
 Config:
@@ -41,15 +48,15 @@ Run:
 # help
 fin-stats -h
 # use ~/finances.yaml
-fin-stats
+fin-stats sum
 # pass filename
-fin-stats -file ~/finances.yaml
+fin-stats sum -f ~/finances.yaml
 # no details
-fin-stats -no-details
+fin-stats sum -no-details
 # no summary
-fin-stats -no-summary
+fin-stats sum -no-summary
 # no graph
-fin-stats -no-graph
+fin-stats sum -no-graph
 ```
 
 Output:
