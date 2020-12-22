@@ -185,7 +185,7 @@ func quoteInfo(symbol string, watch bool) {
         data = append(data, quote.Price)
       }
 
-      graph := asciigraph.Plot(data, asciigraph.Height(8))
+      graph := asciigraph.Plot(data, asciigraph.Height(16))
       if len(data) > 80 {
         graph = asciigraph.Plot(data, asciigraph.Height(8), asciigraph.Width(80))
       }
@@ -246,7 +246,9 @@ func sum(options Options) {
   prettyPrint(&buf, out, options)
 
   history := loadHistory(filename)
-  writeFile(buf, filename, start)
+  if !options.NoSummary {
+    writeFile(buf, filename, start)
+  }
 
   if !options.NoGraph && len(history) > 0 {
     data := []float64{}
