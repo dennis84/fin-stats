@@ -6,7 +6,6 @@ Sum finances of bank accounts, stocks, assets and crypto for a better overview.
 
 ```bash
 go build fin-stats.go
-./fin-stats
 ```
 
 ## Usage
@@ -125,4 +124,30 @@ Total:
  12534 ┤              │     ╭──╯
  11867 ┤              │     │
  11200 ┤              ╰─────╯
+```
+
+## Quote
+
+Print quote stats
+
+```bash
+fin-stats quote --watch aapl
+```
+
+Output:
+
+```bash
+symbol: AAPL
+price: 132.18
+pct: 3.0804002
+
+ 132 ┤                               ╭────
+ 132 ┤                         ╭╮  ╭─╯
+ 132 ┤                         │╰─╮│
+ 132 ┤                      ╭╮ │  ││
+ 132 ┤   ╭───────╮╭─╮╭╮     ││ │  ││
+ 132 ┤╭─╮│       ││ │││  ╭╮ ││ │  ╰╯
+ 132 ┼╯ ╰╯       ││ ╰╯╰──╯╰─╯│ │
+ 132 ┤           ││          ╰─╯
+ 132 ┤           ╰╯
 ```

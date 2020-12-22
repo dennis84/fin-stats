@@ -51,6 +51,7 @@ type InvestmentDetail struct {
 type Quote struct {
   Price float64
   Pct float64
+  Symbol string `yaml:"-"`
 }
 
 type Out struct {
@@ -133,13 +134,21 @@ func main() {
       {
         Name: "quote",
         Usage: "Print quote",
+        Flags: []cli.Flag {
+          &cli.BoolFlag{
+            Name: "watch",
+            Aliases: []string{"w"},
+            Value: false,
+            Usage: "watch mode",
+          },
+        },
         Action:  func(c *cli.Context) error {
           symbol := ""
           if c.NArg() > 0 {
             symbol = c.Args().Get(0)
           }
 
-          quoteInfo(symbol)
+          quoteInfo(symbol, c.Bool("watch"))
           return nil
         },
       },
@@ -153,11 +162,40 @@ func main() {
   }
 }
 
-func quoteInfo(symbol string) {
-  q := getQuote(symbol)
+func printQuote(q Quote) {
   d := toBytes(&q)
-  fmt.Println("symbol:", symbol)
+  fmt.Println("symbol:", q.Symbol)
   fmt.Println(string(d))
+}
+
+func quoteInfo(symbol string, watch bool) {
+  if watch {
+    quotes := []Quote{}
+    ticker := time.NewTicker(2 * time.Second)
+    for _ = range ticker.C {
+      q := getQuote(symbol, false)
+      quotes = append(quotes, q)
+
+      fmt.Print("\033[H\033[2J")
+      printQuote(q)
+
+      data := []float64{}
+
+      for _, quote := range quotes {
+        data = append(data, quote.Price)
+      }
+
+      graph := asciigraph.Plot(data, asciigraph.Height(8))
+      if len(data) > 80 {
+        graph = asciigraph.Plot(data, asciigraph.Height(8), asciigraph.Width(80))
+      }
+
+      fmt.Println(graph)
+    }
+  }
+
+  q := getQuote(symbol, false)
+  printQuote(q)
 }
 
 func sum(options Options) {
@@ -227,13 +265,13 @@ func sum(options Options) {
   }
 }
 
-func getQuote(symbol string) Quote {
+func getQuote(symbol string, cache bool) Quote {
   q, err := quote.Get(symbol)
   if err != nil {
     fmt.Println(err)
   }
 
-  if value, ok := quoteCache[symbol]; ok {
+  if value, ok := quoteCache[symbol]; ok && cache != false {
     return value
   }
 
@@ -252,14 +290,14 @@ func getQuote(symbol string) Quote {
     os.Exit(1)
   }
 
-  quote := Quote{price, pct}
+  quote := Quote{price, pct, q.Symbol}
   quoteCache[symbol] = quote
   return quote
 }
 
 func getCurrency(name string) float64 {
   if name == "EUR" {
-    return getQuote("EUR=X").Price
+    return getQuote("EUR=X", true).Price
   }
 
   return 1.0
@@ -273,7 +311,7 @@ func getInvestmentsStats(investments map[string][]Order) InvestmentStats {
 
   for symbol, orders := range investments {
     for _, order := range orders {
-      quote := getQuote(symbol)
+      quote := getQuote(symbol, true)
       price := quote.Price
       in := order.In
 
