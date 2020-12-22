@@ -8,7 +8,7 @@ Sum finances of bank accounts, stocks, assets and crypto for a better overview.
 go build fin-stats.go
 ```
 
-## Usage
+## Sum
 
 Config:
 
@@ -59,6 +59,7 @@ fin-stats sum -no-graph
 ```
 
 Output:
+
 ```bash
 date: 2020-12-22T10:59:57.529261789+01:00
 savings: 11200
@@ -77,42 +78,6 @@ total: 16528.4
 income: 2500
 expenses: 1320
 budget: 1180
-
-stock_details:
-  AAPL:
-  - units: 2
-    sum: 263.62
-    in: 260
-    diff: 3.6200000000000045
-    quote:
-      price: 131.81
-      pct: 2.7918599
-  TSLA:
-  - units: 1
-    sum: 656.99
-    in: 400
-    diff: 256.99
-    quote:
-      price: 656.99
-      pct: 1.0971602
-  - units: 1
-    sum: 656.99
-    in: 500
-    diff: 156.99
-    quote:
-      price: 656.99
-      pct: 1.0971602
-
-asset_details:
-  GC=F:
-  - units: 2
-    sum: 3750.8
-    in: 2400
-    diff: 1350.8000000000002
-    quote:
-      price: 1875.4
-      pct: -0.39303294
-
 
 Total:
  16534 ┼──────────────╮        ╭
@@ -150,4 +115,31 @@ pct: 3.0804002
  132 ┼╯ ╰╯       ││ ╰╯╰──╯╰─╯│ │
  132 ┤           ││          ╰─╯
  132 ┤           ╰╯
+```
+
+## Mentions
+
+Print mentions from wsb
+
+```bash
+fin-stats mentions --watch -n 10
+```
+
+Output:
+
+```bash
++--------+----------+--------+-------+
+| SYMBOL | MENTIONS | PRICE  |  PCT  |
++--------+----------+--------+-------+
+| AAPL   |     2038 | 132.15 |  3.06 |
+| PLTR   |     1769 |  28.14 | -1.30 |
+| GME    |     1367 |  19.39 | 24.86 |
+| TSLA   |     1310 | 622.61 | -4.19 |
+| SPY    |      671 | 367.51 | -0.10 |
+| QS     |      518 | 121.06 | 27.57 |
+| NIO    |      449 |  47.08 | -3.82 |
+| VLDR   |      238 |  25.97 |  5.23 |
+| PTON   |      237 | 161.78 | 12.04 |
+| AMD    |      187 |  91.70 | -1.64 |
++--------+----------+--------+-------+
 ```

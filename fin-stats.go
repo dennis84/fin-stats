@@ -7,11 +7,14 @@ import (
   "os/user"
   "fmt"
   "time"
+  "encoding/json"
+  "net/http"
   "io/ioutil"
   "gopkg.in/yaml.v2"
   "github.com/piquette/finance-go/quote"
   "github.com/guptarohit/asciigraph"
   "github.com/urfave/cli/v2"
+  "github.com/olekukonko/tablewriter"
 )
 
 type Order struct {
@@ -72,6 +75,20 @@ type DetailsOut struct {
   Details map[string][]InvestmentDetail
 }
 
+type Mention struct {
+  Symbol string
+  Mentions string
+  Quote Quote `yaml:"quote,inline"`
+}
+
+type MentionsTable struct {
+  DataValues []Mention `json:"data_values"`
+}
+
+type MentionsOut struct {
+  Mentions map[string]Mention
+}
+
 type Options struct {
   File string `flag:"file f"`
   NoDetails bool
@@ -81,6 +98,7 @@ type Options struct {
 }
 
 var quoteCache = make(map[string]Quote)
+var client = &http.Client{Timeout: 10 * time.Second}
 
 func main() {
   app := &cli.App{
@@ -152,6 +170,28 @@ func main() {
           return nil
         },
       },
+      {
+        Name: "mentions",
+        Usage: "Top mentions on wsb",
+        Flags: []cli.Flag {
+          &cli.BoolFlag{
+            Name: "watch",
+            Aliases: []string{"w"},
+            Value: false,
+            Usage: "watch mode",
+          },
+          &cli.IntFlag{
+            Name: "number",
+            Aliases: []string{"n"},
+            Value: 10,
+            Usage: "max number of mentions",
+          },
+        },
+        Action:  func(c *cli.Context) error {
+          mentions(c.Bool("watch"), c.Int("number"))
+          return nil
+        },
+      },
     },
   }
 
@@ -160,6 +200,58 @@ func main() {
     fmt.Println(err)
     os.Exit(1)
   }
+}
+
+func printMentions(max int) {
+  url := "https://wsbsynth.com/ajax/get_table.php"
+  r, err := client.Get(url)
+
+  if err != nil {
+    fmt.Println(err)
+    os.Exit(1)
+  }
+
+  defer r.Body.Close()
+  m := &MentionsTable{}
+  err = json.NewDecoder(r.Body).Decode(m)
+
+  if err != nil {
+    fmt.Println(err)
+    os.Exit(1)
+  }
+
+  data := [][]string{}
+
+  for _, mention := range m.DataValues[0:max] {
+    q := getQuote(mention.Symbol, false, false)
+    data = append(data, []string{
+      mention.Symbol,
+      mention.Mentions,
+      fmt.Sprintf("%.2f", q.Price),
+      fmt.Sprintf("%.2f", q.Pct),
+    })
+  }
+
+  table := tablewriter.NewWriter(os.Stdout)
+  table.SetHeader([]string{"Symbol", "Mentions", "Price", "Pct"})
+
+  for _, v := range data {
+    table.Append(v)
+  }
+
+  table.Render()
+}
+
+func mentions(watch bool, max int) {
+  if watch {
+    ticker := time.NewTicker(60 * time.Second)
+    for; true; <-ticker.C {
+      fmt.Print("\033[H\033[2J")
+      printMentions(max)
+    }
+  }
+
+  printMentions(max)
 }
 
 func printQuote(q Quote) {
@@ -172,8 +264,8 @@ func quoteInfo(symbol string, watch bool) {
   if watch {
     quotes := []Quote{}
     ticker := time.NewTicker(2 * time.Second)
-    for _ = range ticker.C {
-      q := getQuote(symbol, false)
+    for; true; <-ticker.C {
+      q := getQuote(symbol, false, true)
       quotes = append(quotes, q)
 
       fmt.Print("\033[H\033[2J")
@@ -194,8 +286,9 @@ func quoteInfo(symbol string, watch bool) {
     }
   }
 
-  q := getQuote(symbol, false)
+  q := getQuote(symbol, false, true)
   printQuote(q)
+
 }
 
 func sum(options Options) {
@@ -267,7 +360,7 @@ func sum(options Options) {
   }
 }
 
-func getQuote(symbol string, cache bool) Quote {
+func getQuote(symbol string, cache bool, fail bool) Quote {
   q, err := quote.Get(symbol)
   if err != nil {
     fmt.Println(err)
@@ -287,7 +380,7 @@ func getQuote(symbol string, cache bool) Quote {
     pct = q.PostMarketChangePercent
   }
 
-  if price == 0 {
+  if price == 0 && fail {
     fmt.Println("Quote price is 0, used wrong symbol?", symbol)
     os.Exit(1)
   }
@@ -299,7 +392,7 @@ func getQuote(symbol string, cache bool) Quote {
 
 func getCurrency(name string) float64 {
   if name == "EUR" {
-    return getQuote("EUR=X", true).Price
+    return getQuote("EUR=X", true, true).Price
   }
 
   return 1.0
@@ -313,7 +406,7 @@ func getInvestmentsStats(investments map[string][]Order) InvestmentStats {
 
   for symbol, orders := range investments {
     for _, order := range orders {
-      quote := getQuote(symbol, true)
+      quote := getQuote(symbol, true, true)
       price := quote.Price
       in := order.In
 
