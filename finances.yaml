@@ -9,7 +9,7 @@ investments:
     GC=F: [{units: 2, in: 1200}]
   stocks:
     TSLA: [{units: 1, in: 400}, {units: 1, in: 500}]
-    AAPL: [{units: 2, in: 140}]
+    AAPL: [{units: 2, in: 130}]
 
 income:
   salary: 2500

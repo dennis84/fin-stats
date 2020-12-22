@@ -11,6 +11,7 @@ import (
   "flag"
   "gopkg.in/yaml.v2"
   "github.com/piquette/finance-go/quote"
+  "github.com/guptarohit/asciigraph"
 )
 
 type Order struct {
@@ -19,7 +20,7 @@ type Order struct {
   Currency string
 }
 
-type conf struct {
+type Conf struct {
   Currency string
   Savings map[string]float64
   Investments struct {
@@ -34,6 +35,7 @@ type conf struct {
 type InvestmentStats struct {
   Sum float64
   In float64
+  Diff float64
   Loss float64
   Details map[string][]InvestmentDetail `yaml:"-"`
 }
@@ -121,72 +123,23 @@ func main() {
   }
 
   prettyPrint(&buf, out, *detailsPtr)
+
+  history := loadHistory(filename)
   writeFile(buf, filename, start)
-}
 
-func writeFile(buf bytes.Buffer, filename string, date time.Time) {
-  dir, err := filepath.Abs(filepath.Dir(filename))
-  if err != nil {
-    fmt.Println(err)
+  data := []float64{}
+
+  for _, stat := range history {
+    data = append(data, stat.Total)
   }
 
-  dataDir := dir + "/finances"
-  _, err = os.Stat(dataDir)
-  if err != nil {
-    fmt.Println("Stats could not be saved in:", dataDir)
-    os.Exit(0)
+  graph := asciigraph.Plot(data, asciigraph.Height(8))
+  if len(data) > 80 {
+    graph = asciigraph.Plot(data, asciigraph.Height(8), asciigraph.Width(80))
   }
 
-  target := dataDir + "/" + date.Format(time.RFC3339) + ".yaml"
-  file, err := os.Create(target)
-
-  if err != nil {
-    fmt.Println("Could not create file:", filename)
-    os.Exit(1)
-  }
-
-  file.Write(buf.Bytes())
-  file.Close()
-}
-
-func findConfigFile(file string) string {
-  usr, err := user.Current()
-  if err != nil {
-    fmt.Println(err)
-  }
-
-  if file != "" {
-    _, err = os.Stat(file)
-    if err != nil {
-      fmt.Println("File does not exists:", file)
-      os.Exit(1)
-    }
-
-    return file
-  }
-
-  filename := "finances.yaml"
-  _, err = os.Stat(usr.HomeDir + "/" + filename)
-  if err == nil {
-    return usr.HomeDir + "/" + filename
-  }
-
-  return filename
-}
-
-func readConf(filename string) (*conf, error) {
-  buf, err := ioutil.ReadFile(filename)
-  if err != nil {
-    return nil, err
-  }
-
-  c := &conf{}
-  err = yaml.Unmarshal(buf, c)
-  if err != nil {
-    return nil, fmt.Errorf("in file %q: %v", filename, err)
-  }
-
-  return c, nil
+  fmt.Println("Total:")
+  fmt.Println(graph)
 }
 
 func getQuote(symbol string) Quote {
@@ -207,6 +160,11 @@ func getQuote(symbol string) Quote {
   } else if q.MarketState == "POST" && q.PostMarketPrice > 0 {
     price = q.PostMarketPrice
     pct = q.PostMarketChangePercent
+  }
+
+  if price == 0 {
+    fmt.Println("Quote price is 0, used wrong symbol?", symbol)
+    os.Exit(1)
   }
 
   quote := Quote{price, pct}
@@ -259,7 +217,7 @@ func getInvestmentsStats(investments map[string][]Order) InvestmentStats {
     }
   }
 
-  return InvestmentStats{sum, sumIn, loss, details}
+  return InvestmentStats{sum, sumIn, sum - sumIn, loss, details}
 }
 
 func prettyPrint(buf *bytes.Buffer, out Out, details bool) {
@@ -291,6 +249,118 @@ func toBytes(in interface{}) []byte {
   }
 
   return d
+}
+
+func loadHistory(filename string) []Out {
+  dir, err := filepath.Abs(filepath.Dir(filename))
+  if err != nil {
+    fmt.Println(err)
+  }
+
+  outs := make([]Out, 0)
+  dataDir := dir + "/finances"
+  _, err = os.Stat(dataDir)
+  if err != nil {
+    return outs
+  }
+
+  files, err := ioutil.ReadDir(dataDir)
+  if err != nil {
+    return outs
+  }
+
+  for _, f := range files {
+    path := dataDir + "/" + f.Name()
+    out, err := readOut(path)
+    if err != nil {
+      fmt.Println("Could not read file from history:", path, err)
+      continue
+    }
+
+    outs = append(outs, *out)
+  }
+
+  return outs
+}
+
+func writeFile(buf bytes.Buffer, filename string, date time.Time) {
+  dir, err := filepath.Abs(filepath.Dir(filename))
+  if err != nil {
+    fmt.Println(err)
+  }
+
+  dataDir := dir + "/finances"
+  _, err = os.Stat(dataDir)
+  if err != nil {
+    fmt.Println("Stats could not be saved in:", dataDir)
+    os.Exit(0)
+  }
+
+  target := dataDir + "/" + date.Format(time.RFC3339) + ".yaml"
+  file, err := os.Create(target)
+
+  if err != nil {
+    fmt.Println("Could not create file:", filename)
+    os.Exit(1)
+  }
+
+  file.Write(buf.Bytes())
+  file.Close()
+}
+
+func findConfigFile(file string) string {
+  usr, err := user.Current()
+  if err != nil {
+    fmt.Println(err)
+  }
+
+  if file != "" {
+    _, err = os.Stat(file)
+    if err != nil {
+      fmt.Println("File does not exists:", file)
+      os.Exit(1)
+    }
+
+    return file
+  }
+
+  filename := "finances.yaml"
+  _, err = os.Stat(usr.HomeDir + "/" + filename)
+  if err == nil {
+    return usr.HomeDir + "/" + filename
+  }
+
+  return filename
+}
+
+func readConf(filename string) (*Conf, error) {
+  buf, err := ioutil.ReadFile(filename)
+  if err != nil {
+    return nil, err
+  }
+
+  c := &Conf{}
+  err = yaml.Unmarshal(buf, c)
+  if err != nil {
+    return nil, fmt.Errorf("in file %q: %v", filename, err)
+  }
+
+  return c, nil
+}
+
+func readOut(filename string) (*Out, error) {
+  buf, err := ioutil.ReadFile(filename)
+  if err != nil {
+    return nil, err
+  }
+
+  c := &Out{}
+  err = yaml.Unmarshal(buf, c)
+  if err != nil {
+    return nil, fmt.Errorf("in file %q: %v", filename, err)
+  }
+
+  return c, nil
 }
 
 func getHomeDir() string {

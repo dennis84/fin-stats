@@ -44,56 +44,72 @@ fin-stats
 fin-stats -f ~/finances.yaml
 # print investments details
 fin-stats -f ~/finances.yaml -d
-# write to target directory
-fin-stats -f ~/finances.yaml -d -o ~/finances
 ```
 
 Output:
 ```bash
-finance_stats:
-  file:           ./finances.yaml
-  date:           2020-12-21T15:12:53+01:00
-stocks_details:
-  - symbol:       TSLA
-    units:        1
-    in:           400.00
-    current:      665.05
-    profit:       265.05
-    unit_price:   665.05
-    today_change: -4.31
-  - symbol:       TSLA
-    units:        1
-    in:           500.00
-    current:      665.05
-    profit:       165.05
-    unit_price:   665.05
-    today_change: -4.31
-  - symbol:       AAPL
-    units:        2
-    in:           280.00
-    current:      250.20
-    loss:         29.80
-    unit_price:   125.10
-    today_change: -1.23
-assets_details:
-  - symbol:       GC=F
-    units:        2
-    in:           2400.00
-    current:      3775.80
-    profit:       1375.80
-    unit_price:   1887.90
-    today_change: -0.05
-savings:          11200.00
+date: 2020-12-22T10:59:57.529261789+01:00
+savings: 11200
 stocks:
-  current:        1580.30
-  diff:           400.30
-  losses:         29.80
+  sum: 1577.6
+  in: 1160
+  diff: 417.5999999999999
+  loss: 0
 assets:
-  current:        3775.80
-  diff:           1375.80
-  losses:         0.00
-total:            16556.10
-income:           2500.00
-expenses:         1320.00
-budget:           1180.00
+  sum: 3750.8
+  in: 2400
+  diff: 1350.8000000000002
+  loss: 0
+investments_sum: 5328.4
+total: 16528.4
+income: 2500
+expenses: 1320
+budget: 1180
+
+stock_details:
+  AAPL:
+  - units: 2
+    sum: 263.62
+    in: 260
+    diff: 3.6200000000000045
+    quote:
+      price: 131.81
+      pct: 2.7918599
+  TSLA:
+  - units: 1
+    sum: 656.99
+    in: 400
+    diff: 256.99
+    quote:
+      price: 656.99
+      pct: 1.0971602
+  - units: 1
+    sum: 656.99
+    in: 500
+    diff: 156.99
+    quote:
+      price: 656.99
+      pct: 1.0971602
+
+asset_details:
+  GC=F:
+  - units: 2
+    sum: 3750.8
+    in: 2400
+    diff: 1350.8000000000002
+    quote:
+      price: 1875.4
+      pct: -0.39303294
+
+
+Total:
+ 16534 ┼──────────────╮        ╭
+ 15868 ┤              │        │
+ 15201 ┤              │        │
+ 14534 ┤              │        │
+ 13867 ┤              │        │
+ 13200 ┤              │        │
+ 12534 ┤              │     ╭──╯
+ 11867 ┤              │     │
+ 11200 ┤              ╰─────╯
 ```
