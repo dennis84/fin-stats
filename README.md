@@ -50,12 +50,6 @@ fin-stats -h
 fin-stats sum
 # pass filename
 fin-stats sum -f ~/finances.yaml
-# no details
-fin-stats sum -no-details
-# no summary
-fin-stats sum -no-summary
-# no graph
-fin-stats sum -no-graph
 ```
 
 Output:
@@ -127,7 +121,7 @@ fin-stats mentions --watch -n 10
 
 Output:
 
-```bash
+```
 +--------+----------+--------+-------+
 | SYMBOL | MENTIONS | PRICE  |  PCT  |
 +--------+----------+--------+-------+
@@ -142,4 +136,25 @@ Output:
 | PTON   |      237 | 161.78 | 12.04 |
 | AMD    |      187 |  91.70 | -1.64 |
 +--------+----------+--------+-------+
+```
+
+## Portfolio
+
+Print portfolio stats
+
+```bash
+fin-stats portfolio
+```
+
+Output:
+
+```
++--------+---------+---------+---------+-------------+-----------+
+| SYMBOL |   SUM   |   IN    |  DIFF   | QUOTE PRICE | QUOTE PCT |
++--------+---------+---------+---------+-------------+-----------+
+| TSLA   |  635.50 |  400.00 |  235.50 |      635.50 |     -2.21 |
+| TSLA   |  635.50 |  500.00 |  135.50 |      635.50 |     -2.21 |
+| GC=F   | 3734.00 | 2400.00 | 1334.00 |     1867.00 |     -0.84 |
+| AAPL   |  263.20 |  260.00 |    3.20 |      131.60 |      2.63 |
++--------+---------+---------+---------+-------------+-----------+
 ```
