@@ -1,11 +1,16 @@
 # Fin Stats
 
-Sum finances of bank accounts, stocks, assets and crypto for a better overview.
+Command line interface for daily finance statistics
+
+- Sum finances of bank accounts, stocks, assets and crypto for a better overview
+- Quote statistics
+- Portfolio statistics
+- WSB mentions
 
 ## Build
 
 ```bash
-go build fin-stats.go
+go build
 ```
 
 ## Sum
