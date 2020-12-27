@@ -50,7 +50,9 @@ type InvestmentDetail struct {
 type Quote struct {
   Price float64
   Pct float64
-  Symbol string `yaml:"-"`
+  Symbol string
+  State string
+  MarketInfo MarketInfo
 }
 
 var client = &http.Client{Timeout: 10 * time.Second}
@@ -95,7 +97,13 @@ func getQuote(symbol string, fail bool) Quote {
     os.Exit(1)
   }
 
-  quote := Quote{price, pct, q.Symbol}
+  quote := Quote{
+    price,
+    pct,
+    q.Symbol,
+    string(q.MarketState),
+    getMarketInfo(*q),
+  }
   return quote
 }
 

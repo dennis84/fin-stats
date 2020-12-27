@@ -7,6 +7,7 @@ require (
 	github.com/octago/sflags v0.2.0
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/piquette/finance-go v1.0.0
+	github.com/piquette/qtrn v0.0.9 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/urfave/cli/v2 v2.3.0
 	gopkg.in/yaml.v2 v2.2.3

@@ -36,20 +36,33 @@ func CmdPortfolio() *cli.Command {
 
 func printInvestmentDetailsTable(details []InvestmentDetail) {
   data := [][]string{}
+  table := tablewriter.NewWriter(os.Stdout)
+  table.SetHeader([]string{"Symbol", "Sum", "In", "Diff", "Quote Price", "Quote Pct"})
 
   for _, detail := range details {
-    data = append(data, []string{
+    row := []string{
       detail.Quote.Symbol,
       fmt.Sprintf("%.2f", detail.Sum),
       fmt.Sprintf("%.2f", detail.In),
       fmt.Sprintf("%.2f", detail.Diff),
       fmt.Sprintf("%.2f", detail.Quote.Price),
       fmt.Sprintf("%.2f", detail.Quote.Pct),
+    }
+
+    color := tablewriter.FgGreenColor
+    if detail.Quote.Pct < 0 {
+      color = tablewriter.FgRedColor
+    }
+
+    table.Rich(row, []tablewriter.Colors{
+      tablewriter.Colors{},
+      tablewriter.Colors{},
+      tablewriter.Colors{},
+      tablewriter.Colors{},
+      tablewriter.Colors{},
+      tablewriter.Colors{tablewriter.Bold, color},
     })
   }
-
-  table := tablewriter.NewWriter(os.Stdout)
-  table.SetHeader([]string{"Symbol", "Sum", "In", "Diff", "Quote Price", "Quote Pct"})
 
   for _, v := range data {
     table.Append(v)

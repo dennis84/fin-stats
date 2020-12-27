@@ -79,19 +79,30 @@ func printMentions(max int) {
   }
 
   data := [][]string{}
+  table := tablewriter.NewWriter(os.Stdout)
+  table.SetHeader([]string{"Symbol", "Mentions", "Price", "Pct"})
 
   for _, mention := range m.DataValues[0:max] {
     q := getQuote(mention.Symbol, false)
-    data = append(data, []string{
+    row := []string{
       mention.Symbol,
       mention.Mentions,
       fmt.Sprintf("%.2f", q.Price),
       fmt.Sprintf("%.2f", q.Pct),
+    }
+
+    color := tablewriter.FgGreenColor
+    if q.Pct < 0 {
+      color = tablewriter.FgRedColor
+    }
+
+    table.Rich(row, []tablewriter.Colors{
+      tablewriter.Colors{},
+      tablewriter.Colors{},
+      tablewriter.Colors{},
+      tablewriter.Colors{tablewriter.Bold, color},
     })
   }
-
-  table := tablewriter.NewWriter(os.Stdout)
-  table.SetHeader([]string{"Symbol", "Mentions", "Price", "Pct"})
 
   for _, v := range data {
     table.Append(v)
@@ -100,4 +111,3 @@ func printMentions(max int) {
   fmt.Println("")
   table.Render()
 }
-
