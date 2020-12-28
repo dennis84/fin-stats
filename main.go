@@ -52,6 +52,7 @@ type Quote struct {
   Pct float64
   Symbol string
   State string
+  Name string
   MarketInfo MarketInfo
 }
 
@@ -102,6 +103,7 @@ func getQuote(symbol string, fail bool) Quote {
     pct,
     q.Symbol,
     string(q.MarketState),
+    q.ShortName,
     getMarketInfo(*q),
   }
   return quote

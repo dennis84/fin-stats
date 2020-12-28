@@ -11,6 +11,8 @@ import (
   "github.com/olekukonko/tablewriter"
 )
 
+var graphData = []float64{}
+
 func CmdQuote() *cli.Command {
   return &cli.Command{
     Name: "quote",
@@ -37,16 +39,16 @@ func CmdQuote() *cli.Command {
 
 func printQuotes(quotes []Quote) {
   table := tablewriter.NewWriter(os.Stdout)
-  headers := []string{"Symbol", "Price", "Pct", "State", "Event"}
+  headers := []string{"Symbol", "Price", "Pct", "State", "Name", "Trading Hours"}
   data := [][]string{}
 
   for _, q := range quotes {
     color := tablewriter.FgGreenColor
     event := ""
 
-    if q.State == "CLOSED" && q.MarketInfo.DurationUntilOpenPre != nil {
+    if (q.State == "CLOSED" || q.State == "PREPRE") && q.MarketInfo.DurationUntilOpenPre != nil {
       event = fmt.Sprintf("Pre market opens in %s", formatDuration(*q.MarketInfo.DurationUntilOpenPre))
-    } else if q.State == "CLOSED" && q.MarketInfo.DurationUntilOpen != nil {
+    } else if (q.State == "CLOSED" || q.State == "PREPRE") && q.MarketInfo.DurationUntilOpen != nil {
       event = fmt.Sprintf("Market opens in %s", formatDuration(*q.MarketInfo.DurationUntilOpen))
     } else if q.State == "PRE" && q.MarketInfo.DurationUntilOpen != nil {
       event = fmt.Sprintf("Market opens in %s", formatDuration(*q.MarketInfo.DurationUntilOpen))
@@ -61,6 +63,7 @@ func printQuotes(quotes []Quote) {
       fmt.Sprintf("%.2f", q.Price),
       fmt.Sprintf("%.2f", q.Pct),
       q.State,
+      q.Name,
       event,
     }
 
@@ -84,8 +87,6 @@ func printQuotes(quotes []Quote) {
 
   table.Render()
 }
-
-var graphData = []float64{}
 
 func printQuoteGraph(q Quote) {
   graphData = append(graphData, q.Price)
