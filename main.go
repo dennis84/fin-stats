@@ -77,41 +77,40 @@ func main() {
   }
 }
 
-func getQuote(symbol string, fail bool) Quote {
+func getQuote(symbol string, fail bool) (Quote, error) {
+  result := Quote{}
   q, err := quote.Get(symbol)
   if err != nil {
-    fmt.Println(err)
+    return result, err
   }
 
-  price := q.RegularMarketPrice
-  pct := q.RegularMarketChangePercent
+  if q == nil {
+    return result, fmt.Errorf("Could not find quote by symbol %s", symbol)
+  }
+
+  result.Price = q.RegularMarketPrice
+  result.Pct = q.RegularMarketChangePercent
+
   if q.MarketState == "PRE" && q.PreMarketPrice > 0 {
-    price = q.PreMarketPrice
-    pct = q.PreMarketChangePercent
+    result.Price = q.PreMarketPrice
+    result.Pct = q.PreMarketChangePercent
   } else if q.MarketState == "POST" && q.PostMarketPrice > 0 {
-    price = q.PostMarketPrice
-    pct = q.PostMarketChangePercent
+    result.Price = q.PostMarketPrice
+    result.Pct = q.PostMarketChangePercent
   }
 
-  if price == 0 && fail {
-    fmt.Println("Quote price is 0, used wrong symbol?", symbol)
-    os.Exit(1)
-  }
+  result.Symbol = q.Symbol
+  result.State = string(q.MarketState)
+  result.Name = q.ShortName
+  result.MarketInfo = getMarketInfo(*q)
 
-  quote := Quote{
-    price,
-    pct,
-    q.Symbol,
-    string(q.MarketState),
-    q.ShortName,
-    getMarketInfo(*q),
-  }
-  return quote
+  return result, nil
 }
 
 func getCurrency(name string) float64 {
   if name == "EUR" {
-    return getQuote("EUR=X", true).Price
+    q, _ := getQuote("EUR=X", true)
+    return q.Price
   }
 
   return 1.0
@@ -125,7 +124,7 @@ func getInvestmentsStats(investments map[string][]Order) InvestmentStats {
 
   for symbol, orders := range investments {
     for _, order := range orders {
-      quote := getQuote(symbol, true)
+      quote, _ := getQuote(symbol, true)
       price := quote.Price
       in := order.In
 

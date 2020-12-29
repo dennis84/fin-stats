@@ -52,7 +52,7 @@ func printQuotes(quotes []Quote) {
       event = fmt.Sprintf("Market opens in %s", formatDuration(*q.MarketInfo.DurationUntilOpen))
     } else if q.State == "PRE" && q.MarketInfo.DurationUntilOpen != nil {
       event = fmt.Sprintf("Market opens in %s", formatDuration(*q.MarketInfo.DurationUntilOpen))
-    } else if q.State == "OPEN" && q.MarketInfo.DurationUntilClose != nil {
+    } else if q.State == "REGULAR" && q.MarketInfo.DurationUntilClose != nil {
       event = fmt.Sprintf("Market closes in %s", formatDuration(*q.MarketInfo.DurationUntilClose))
     } else if q.State == "POST" && q.MarketInfo.DurationUntilClosePost != nil {
       event = fmt.Sprintf("Post market closes in %s", formatDuration(*q.MarketInfo.DurationUntilClosePost))
@@ -89,11 +89,12 @@ func printQuotes(quotes []Quote) {
 }
 
 func printQuoteGraph(q Quote) {
+  if len(graphData) > 80 {
+    graphData = graphData[1:]
+  }
+
   graphData = append(graphData, q.Price)
   graph := asciigraph.Plot(graphData, asciigraph.Height(16))
-  if len(graphData) > 80 {
-    graph = asciigraph.Plot(graphData, asciigraph.Height(8), asciigraph.Width(80))
-  }
 
   fmt.Println("")
   fmt.Println(graph)
@@ -105,8 +106,10 @@ func quoteInfo(symbols []string, watch bool) {
     for; true; <-ticker.C {
       quotes := []Quote{}
       for _, symbol := range symbols {
-        q := getQuote(symbol, true)
-        quotes = append(quotes, q)
+        q, err := getQuote(symbol, true)
+        if err == nil {
+          quotes = append(quotes, q)
+        }
       }
 
       fmt.Print("\033[H\033[2J")
@@ -119,8 +122,10 @@ func quoteInfo(symbols []string, watch bool) {
 
   quotes := []Quote{}
   for _, symbol := range symbols {
-    q := getQuote(symbol, true)
-    quotes = append(quotes, q)
+    q, err := getQuote(symbol, true)
+    if err == nil {
+      quotes = append(quotes, q)
+    }
   }
 
   printQuotes(quotes)

@@ -83,7 +83,7 @@ func printMentions(max int) {
   table.SetHeader([]string{"Symbol", "Mentions", "Price", "Pct"})
 
   for _, mention := range m.DataValues[0:max] {
-    q := getQuote(mention.Symbol, false)
+    q, _ := getQuote(mention.Symbol, false)
     row := []string{
       mention.Symbol,
       mention.Mentions,

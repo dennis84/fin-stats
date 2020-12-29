@@ -71,7 +71,7 @@ func printInvestmentDetailsTable(details []InvestmentDetail) {
   table.Render()
 }
 
-func printPortiflio(file string) {
+func printPortiflio(file string, clear bool) {
   filename := findConfigFile(file)
 
   c := &Conf{}
@@ -102,6 +102,10 @@ func printPortiflio(file string) {
     return details[i].Quote.Symbol > details[j].Quote.Symbol
   })
 
+  if clear {
+    fmt.Print("\033[H\033[2J")
+  }
+
   printInvestmentDetailsTable(details)
 }
 
@@ -109,10 +113,9 @@ func portfolio(file string, watch bool) {
   if watch {
     ticker := time.NewTicker(10 * time.Second)
     for; true; <-ticker.C {
-      fmt.Print("\033[H\033[2J")
-      printPortiflio(file)
+      printPortiflio(file, true)
     }
   }
 
-  printPortiflio(file)
+  printPortiflio(file, false)
 }
