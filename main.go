@@ -2,6 +2,7 @@ package main
 
 import (
   "os"
+  "log"
   "path/filepath"
   "os/user"
   "fmt"
@@ -72,8 +73,7 @@ func main() {
 
   err := app.Run(os.Args)
   if err != nil {
-    fmt.Println(err)
-    os.Exit(1)
+    log.Fatal("Error: ", err)
   }
 }
 
@@ -180,29 +180,28 @@ func getOutDir(configFile string) (string, error) {
   return dataDir, nil
 }
 
-func findConfigFile(file string) string {
+func findConfigFile(file string) (string, error) {
   usr, err := user.Current()
   if err != nil {
-    fmt.Println(err)
+    return "", err
   }
 
   if file != "" {
     _, err = os.Stat(file)
     if err != nil {
-      fmt.Println("File does not exists:", file)
-      os.Exit(1)
+      return "", fmt.Errorf("File does not exists: %s", file)
     }
 
-    return file
+    return file, nil
   }
 
   filename := "finances.yaml"
   _, err = os.Stat(usr.HomeDir + "/" + filename)
   if err == nil {
-    return usr.HomeDir + "/" + filename
+    return usr.HomeDir + "/" + filename, nil
   }
 
-  return filename
+  return filename, nil
 }
 
 func readYaml(filename string, in interface{}) error {

@@ -2,6 +2,7 @@ package main
 
 import (
   "os"
+  "log"
   "fmt"
   "time"
   "encoding/json"
@@ -65,8 +66,7 @@ func printMentions(max int) {
   r, err := client.Get(url)
 
   if err != nil {
-    fmt.Println(err)
-    os.Exit(1)
+    log.Fatal("API request failed: ", err)
   }
 
   defer r.Body.Close()
@@ -74,8 +74,7 @@ func printMentions(max int) {
   err = json.NewDecoder(r.Body).Decode(m)
 
   if err != nil {
-    fmt.Println(err)
-    os.Exit(1)
+    log.Fatal("Could not decode API response: ", err)
   }
 
   data := [][]string{}

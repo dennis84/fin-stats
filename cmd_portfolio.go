@@ -2,6 +2,7 @@ package main
 
 import (
   "os"
+  "log"
   "fmt"
   "time"
   "sort"
@@ -72,13 +73,16 @@ func printInvestmentDetailsTable(details []InvestmentDetail) {
 }
 
 func printPortiflio(file string, clear bool) {
-  filename := findConfigFile(file)
+  filename, err := findConfigFile(file)
+
+  if err != nil {
+    log.Fatal(err)
+  }
 
   c := &Conf{}
-  err := readYaml(filename, c)
+  err = readYaml(filename, c)
   if err != nil {
-    fmt.Println(err)
-    os.Exit(1)
+    log.Fatal("Could not read config file: ", err)
   }
 
   details := []InvestmentDetail{}

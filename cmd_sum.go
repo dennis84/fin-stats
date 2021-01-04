@@ -2,6 +2,7 @@ package main
 
 import (
   "os"
+  "log"
   "fmt"
   "time"
   "io/ioutil"
@@ -81,13 +82,16 @@ func CmdSum() *cli.Command {
 
 func doSum(options Options) {
   start := time.Now()
-  filename := findConfigFile(options.File)
+  filename, err := findConfigFile(options.File)
+
+  if err != nil {
+    log.Fatal(err)
+  }
 
   c := &Conf{}
-  err := readYaml(filename, c)
+  err = readYaml(filename, c)
   if err != nil {
-    fmt.Println(err)
-    os.Exit(1)
+    log.Fatal(err)
   }
 
   savings := 0.0
@@ -214,16 +218,14 @@ func printSumTable(out Out, options Options) {
 func writeFile(out Out, configFile string, date time.Time) {
   dir, err := getOutDir(configFile)
   if err != nil {
-    fmt.Println(err)
-    os.Exit(1)
+    log.Fatal(err)
   }
 
   target := dir + "/" + date.Format(time.RFC3339) + ".yaml"
   file, err := os.Create(target)
 
   if err != nil {
-    fmt.Println("Could not create file:", dir)
-    os.Exit(1)
+    log.Fatal("Could not create file:", dir)
   }
 
   file.Write(yamlToBytes(&out))
@@ -248,7 +250,7 @@ func loadHistory(configFile string) []Out {
     out := &Out{}
     err := readYaml(path, out)
     if err != nil {
-      fmt.Println("Could not read file from history:", path, err)
+      log.Println(err)
       continue
     }
 
