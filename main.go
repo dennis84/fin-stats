@@ -66,6 +66,7 @@ func main() {
     Commands: []*cli.Command{
       CmdSum(),
       CmdQuote(),
+      CmdGraph(),
       CmdPortfolio(),
       CmdMentions(),
     },
