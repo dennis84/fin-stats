@@ -5,7 +5,7 @@ Command line interface for daily finance statistics
 - Sum finances of bank accounts, stocks, assets and crypto for a better overview
 - Quote statistics
 - Portfolio statistics
-- WSB mentions
+- WSB trending
 
 ## Build
 
@@ -118,31 +118,26 @@ pct: 3.0804002
  132 ┤           ╰╯
 ```
 
-## Mentions
+## Trending
 
-Print mentions from wsb
+Print trending from wsb
 
 ```bash
-fin-stats mentions --watch -n 10
+fin-stats trending --watch -n 10
 ```
 
 Output:
 
 ```
-+--------+----------+--------+-------+
-| SYMBOL | MENTIONS | PRICE  |  PCT  |
-+--------+----------+--------+-------+
-| AAPL   |     2038 | 132.15 |  3.06 |
-| PLTR   |     1769 |  28.14 | -1.30 |
-| GME    |     1367 |  19.39 | 24.86 |
-| TSLA   |     1310 | 622.61 | -4.19 |
-| SPY    |      671 | 367.51 | -0.10 |
-| QS     |      518 | 121.06 | 27.57 |
-| NIO    |      449 |  47.08 | -3.82 |
-| VLDR   |      238 |  25.97 |  5.23 |
-| PTON   |      237 | 161.78 | 12.04 |
-| AMD    |      187 |  91.70 | -1.64 |
-+--------+----------+--------+-------+
++--------+---------------------------+--------+-------+
+| SYMBOL |           NAME            | PRICE  |  PCT  |
++--------+---------------------------+--------+-------+
+| NVDA   | NVIDIA                    | 195.58 | -0.18 |
+| CLOV   | Clover Health Investments |   8.05 | -6.61 |
+| AMC    | AMC Entertainment         |  36.99 | -0.67 |
+| GME    | GameStop                  | 180.36 | 0.84  |
+| WISH   | ContextLogic              |   9.18 | -3.37 |
++--------+---------------------------+--------+-------+
 ```
 
 ## Portfolio

@@ -10,10 +10,10 @@ import (
   "github.com/olekukonko/tablewriter"
 )
 
-func CmdMentions() *cli.Command {
+func CmdTrending() *cli.Command {
   return &cli.Command{
-    Name: "mentions",
-    Usage: "Top mentions on wsb",
+    Name: "trending",
+    Usage: "Top trending on wsb",
     Flags: []cli.Flag {
       &cli.BoolFlag{
         Name: "watch",
@@ -25,7 +25,7 @@ func CmdMentions() *cli.Command {
         Name: "number",
         Aliases: []string{"n"},
         Value: 10,
-        Usage: "max number of mentions",
+        Usage: "max number of trending tickers",
       },
     },
     Action:  func(c *cli.Context) error {
@@ -33,25 +33,25 @@ func CmdMentions() *cli.Command {
       if number > 20 {
         number = 20
       }
-      mentions(c.Bool("watch"), number)
+      trending(c.Bool("watch"), number)
       return nil
     },
   }
 }
 
-func mentions(watch bool, max int) {
+func trending(watch bool, max int) {
   if watch {
     ticker := time.NewTicker(60 * time.Second)
     for; true; <-ticker.C {
       fmt.Print("\033[H\033[2J")
-      printMentions(max)
+      printTrending(max)
     }
   }
 
-  printMentions(max)
+  printTrending(max)
 }
 
-func printMentions(max int) {
+func printTrending(max int) {
   url := "https://api.wsb-tracker.com/data/symbols-overview"
   r, err := client.Get(url)
 

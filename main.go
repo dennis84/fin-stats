@@ -68,7 +68,7 @@ func main() {
       CmdQuote(),
       CmdGraph(),
       CmdPortfolio(),
-      CmdMentions(),
+      CmdTrending(),
     },
   }
 
