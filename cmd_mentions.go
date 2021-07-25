@@ -10,20 +10,6 @@ import (
   "github.com/olekukonko/tablewriter"
 )
 
-type Mention struct {
-  Symbol string
-  Mentions string
-  Quote Quote `yaml:"quote,inline"`
-}
-
-type MentionsTable struct {
-  DataValues []Mention `json:"data_values"`
-}
-
-type MentionsOut struct {
-  Mentions map[string]Mention
-}
-
 func CmdMentions() *cli.Command {
   return &cli.Command{
     Name: "mentions",
@@ -43,7 +29,11 @@ func CmdMentions() *cli.Command {
       },
     },
     Action:  func(c *cli.Context) error {
-      mentions(c.Bool("watch"), c.Int("number"))
+      number := c.Int("number")
+      if number > 20 {
+        number = 20
+      }
+      mentions(c.Bool("watch"), number)
       return nil
     },
   }
@@ -62,7 +52,7 @@ func mentions(watch bool, max int) {
 }
 
 func printMentions(max int) {
-  url := "https://wsbsynth.com/ajax/get_table.php"
+  url := "https://api.wsb-tracker.com/data/symbols-overview"
   r, err := client.Get(url)
 
   if err != nil {
@@ -70,8 +60,9 @@ func printMentions(max int) {
   }
 
   defer r.Body.Close()
-  m := &MentionsTable{}
-  err = json.NewDecoder(r.Body).Decode(m)
+  list := [][]string{}
+
+  err = json.NewDecoder(r.Body).Decode(&list)
 
   if err != nil {
     log.Fatal("Could not decode API response: ", err)
@@ -79,13 +70,13 @@ func printMentions(max int) {
 
   data := [][]string{}
   table := tablewriter.NewWriter(os.Stdout)
-  table.SetHeader([]string{"Symbol", "Mentions", "Price", "Pct"})
+  table.SetHeader([]string{"Symbol", "Name", "Price", "Pct"})
 
-  for _, mention := range m.DataValues[0:max] {
-    q, _ := getQuote(mention.Symbol, false)
+  for _, tuple := range list[0:max] {
+    q, _ := getQuote(tuple[1], false)
     row := []string{
-      mention.Symbol,
-      mention.Mentions,
+      tuple[1],
+      tuple[0],
       fmt.Sprintf("%.2f", q.Price),
       fmt.Sprintf("%.2f", q.Pct),
     }
