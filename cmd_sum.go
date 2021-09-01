@@ -171,39 +171,39 @@ func printSumTable(out Out, options Options) {
   data := [][]string{}
 
   data = [][]string{
-    []string{"Savings", fmt.Sprintf("%.2f", out.Savings)},
+    {"Savings", fmt.Sprintf("%.2f", out.Savings)},
   }
 
   if out.Stocks.Sum > 0 {
     data = append(data, [][]string{
-      []string{"Stocks Sum", fmt.Sprintf("%.2f", out.Stocks.Sum)},
-      []string{"Stocks In", fmt.Sprintf("%.2f", out.Stocks.In)},
-      []string{"Stocks Diff", fmt.Sprintf("%.2f", out.Stocks.Diff)},
-      []string{"Stocks Loss", fmt.Sprintf("%.2f", out.Stocks.Loss)},
+      {"Stocks Sum", fmt.Sprintf("%.2f", out.Stocks.Sum)},
+      {"Stocks In", fmt.Sprintf("%.2f", out.Stocks.In)},
+      {"Stocks Diff", fmt.Sprintf("%.2f", out.Stocks.Diff)},
+      {"Stocks Loss", fmt.Sprintf("%.2f", out.Stocks.Loss)},
     }...)
   }
 
   if out.Assets.Sum > 0 {
     data = append(data, [][]string{
-      []string{"Assets Sum", fmt.Sprintf("%.2f", out.Assets.Sum)},
-      []string{"Assets In", fmt.Sprintf("%.2f", out.Assets.In)},
-      []string{"Assets Diff", fmt.Sprintf("%.2f", out.Assets.Diff)},
-      []string{"Assets Loss", fmt.Sprintf("%.2f", out.Assets.Loss)},
+      {"Assets Sum", fmt.Sprintf("%.2f", out.Assets.Sum)},
+      {"Assets In", fmt.Sprintf("%.2f", out.Assets.In)},
+      {"Assets Diff", fmt.Sprintf("%.2f", out.Assets.Diff)},
+      {"Assets Loss", fmt.Sprintf("%.2f", out.Assets.Loss)},
     }...)
   }
 
   if out.Crypto.Sum > 0 {
     data = append(data, [][]string{
-      []string{"Crypto Sum", fmt.Sprintf("%.2f", out.Crypto.Sum)},
-      []string{"Crypto In", fmt.Sprintf("%.2f", out.Crypto.In)},
-      []string{"Crypto Diff", fmt.Sprintf("%.2f", out.Crypto.Diff)},
-      []string{"Crypto Loss", fmt.Sprintf("%.2f", out.Crypto.Loss)},
+      {"Crypto Sum", fmt.Sprintf("%.2f", out.Crypto.Sum)},
+      {"Crypto In", fmt.Sprintf("%.2f", out.Crypto.In)},
+      {"Crypto Diff", fmt.Sprintf("%.2f", out.Crypto.Diff)},
+      {"Crypto Loss", fmt.Sprintf("%.2f", out.Crypto.Loss)},
     }...)
   }
 
   data = append(data, [][]string{
-    []string{"Investments Sum", fmt.Sprintf("%.2f", out.InvestmentsSum)},
-    []string{"Total", fmt.Sprintf("%.2f", out.Total)},
+    {"Investments Sum", fmt.Sprintf("%.2f", out.InvestmentsSum)},
+    {"Total", fmt.Sprintf("%.2f", out.Total)},
   }...)
 
   table := tablewriter.NewWriter(os.Stdout)

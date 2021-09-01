@@ -40,7 +40,6 @@ func CmdQuote() *cli.Command {
 func printQuotes(quotes []Quote) {
   table := tablewriter.NewWriter(os.Stdout)
   headers := []string{"Symbol", "Price", "Pct", "State", "Name", "Trading Hours"}
-  data := [][]string{}
 
   for _, q := range quotes {
     color := tablewriter.FgGreenColor
@@ -72,18 +71,13 @@ func printQuotes(quotes []Quote) {
     }
 
     table.Rich(row, []tablewriter.Colors{
-      tablewriter.Colors{},
-      tablewriter.Colors{},
-      tablewriter.Colors{tablewriter.Bold, color},
+      {},
+      {},
+      {tablewriter.Bold, color},
     })
   }
 
-
   table.SetHeader(headers)
-
-  for _, v := range data {
-    table.Append(v)
-  }
 
   table.Render()
 }

@@ -20,15 +20,15 @@ type MarketInfo struct {
 }
 
 var markets = map[string]MarketConfig{
-  "de_market": MarketConfig{"08:00 AM", "09:00 AM", "05:30 PM", "08:00 PM"},
-  "us_market": MarketConfig{"04:00 AM", "09:30 AM", "04:00 PM", "08:00 PM"},
-  "hk_market": MarketConfig{"", "09:30 AM", "04:00 PM", ""},
-  "dk_market": MarketConfig{"", "09:00 AM", "05:00 PM", ""},
-  "gb_market": MarketConfig{"", "09:00 AM", "05:00 PM", ""},
-  "fr_market": MarketConfig{"", "09:00 AM", "05:30 PM", ""},
-  "cn_market": MarketConfig{"", "09:15 AM", "03:00 PM", ""},
-  "au_market": MarketConfig{"", "09:30 AM", "04:00 PM", ""},
-  "jp_market": MarketConfig{"", "09:00 AM", "03:00 PM", ""},
+  "de_market": {"08:00 AM", "09:00 AM", "05:30 PM", "08:00 PM"},
+  "us_market": {"04:00 AM", "09:30 AM", "04:00 PM", "08:00 PM"},
+  "hk_market": {"", "09:30 AM", "04:00 PM", ""},
+  "dk_market": {"", "09:00 AM", "05:00 PM", ""},
+  "gb_market": {"", "09:00 AM", "05:00 PM", ""},
+  "fr_market": {"", "09:00 AM", "05:30 PM", ""},
+  "cn_market": {"", "09:15 AM", "03:00 PM", ""},
+  "au_market": {"", "09:30 AM", "04:00 PM", ""},
+  "jp_market": {"", "09:00 AM", "03:00 PM", ""},
 }
 
 func getMarketInfo(q finance.Quote) MarketInfo {

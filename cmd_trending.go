@@ -68,7 +68,6 @@ func printTrending(max int) {
     log.Fatal("Could not decode API response: ", err)
   }
 
-  data := [][]string{}
   table := tablewriter.NewWriter(os.Stdout)
   table.SetHeader([]string{"Symbol", "Name", "Price", "Pct"})
 
@@ -87,15 +86,11 @@ func printTrending(max int) {
     }
 
     table.Rich(row, []tablewriter.Colors{
-      tablewriter.Colors{},
-      tablewriter.Colors{},
-      tablewriter.Colors{},
-      tablewriter.Colors{tablewriter.Bold, color},
+      {},
+      {},
+      {},
+      {tablewriter.Bold, color},
     })
-  }
-
-  for _, v := range data {
-    table.Append(v)
   }
 
   fmt.Println("")
