@@ -45,7 +45,7 @@ func printInvestmentDetailsTable(details []InvestmentDetail) {
 			fmt.Sprintf("%.2f", detail.Sum),
 			fmt.Sprintf("%.2f", detail.In),
 			fmt.Sprintf("%.2f", detail.Diff),
-			fmt.Sprintf("%.2f", detail.Quote.Price),
+			formatPrice(detail.Quote.Price),
 			fmt.Sprintf("%.2f", detail.Quote.Pct),
 		}
 

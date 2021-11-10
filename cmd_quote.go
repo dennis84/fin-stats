@@ -57,9 +57,10 @@ func printQuotes(quotes []Quote) {
 			event = fmt.Sprintf("Post market closes in %s", formatDuration(*q.MarketInfo.DurationUntilClosePost))
 		}
 
+
 		row := []string{
 			q.Symbol,
-			fmt.Sprintf("%.2f", q.Price),
+			formatPrice(q.Price),
 			fmt.Sprintf("%.2f", q.Pct),
 			q.State,
 			q.Name,

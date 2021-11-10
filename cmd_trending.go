@@ -76,7 +76,7 @@ func printTrending(max int) {
 		row := []string{
 			tuple[1],
 			tuple[0],
-			fmt.Sprintf("%.2f", q.Price),
+			formatPrice(q.Price),
 			fmt.Sprintf("%.2f", q.Pct),
 		}
 

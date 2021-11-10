@@ -113,6 +113,14 @@ func getQuote(symbol string, fail bool) (Quote, error) {
 	return result, nil
 }
 
+func formatPrice(p float64) string {
+	if p < 0.1 && p != 0 {
+		return fmt.Sprintf("%.8f", p)
+	}
+
+	return fmt.Sprintf("%.2f", p)
+}
+
 func getCurrency(name string) float64 {
 	if name == "EUR" {
 		q, _ := getQuote("EUR=X", true)
